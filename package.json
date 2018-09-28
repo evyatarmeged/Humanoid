@@ -1,0 +1,20 @@
+{
+  "name": "express-vuln",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Evyatar Meged",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "axios-cookiejar-support": "^0.4.2",
+    "cloudscraper": "^1.5.0",
+    "html": "^1.0.0",
+    "socks-proxy-agent": "^4.0.1",
+    "url-parse": "^1.4.3",
+    "tough-cookie": "latest"
+  }
+}
