@@ -7,9 +7,9 @@ const tough = require('tough-cookie');
 const Cookie = tough.Cookie;
 
 
-// Add cookie persistence - too bad for the hacky solution
+// Adding cookie persistence to axios. Too bad for the hacky solution tbh
 let cookieJar = new tough.CookieJar();
-//
+
 function setCookieJar(cookieJar) {
 	axios.interceptors.request.use(function (config) {
 		cookieJar.getCookies(config.url, function(err, cookies) {
@@ -17,7 +17,7 @@ function setCookieJar(cookieJar) {
 		});
 		return config;
 	});
-	
+
 	axios.interceptors.response.use(function (response) {
 		if (response.headers['set-cookie'] instanceof Array) {
 			cookies = response.headers['set-cookie'].forEach(function (c) {
@@ -45,7 +45,7 @@ function extractTimeoutFromHTML(htmlResponse) {
 	return match;
 }
 
-function isJSChallengeInRes(htmlResponse) {
+function javascriptChallengeInResponse(htmlResponse) {
 	return htmlResponse.indexOf("jschl") > -1 && htmlResponse.indexOf("DDoS protection by Cloudflare") > -1
 }
 
@@ -56,7 +56,7 @@ function getRequestHeaders(url, userAgent) {
 	headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 	headers["Accept-Encoding"] = "gzip, deflate, br"
 	headers["User-Agent"] = userAgent
-	
+
 	return headers
 }
 
@@ -69,8 +69,6 @@ async function sendRequest(url, method=null, headers=null, userAgent=null) {
 			url: url,
 			headers: headers || getRequestHeaders(url, userAgent),
 			jar: cookieJar,
-			withCredentials: true,
-			maxRedirects: 5
 		});
 	} catch (err) {
 		// HTTP status of 503 means the request/session might have been flagged
@@ -89,24 +87,20 @@ async function sendRequest(url, method=null, headers=null, userAgent=null) {
 // 			console.log(`no JS challenge in sight. Got ${res.code} HTTP status code`)
 // 		})
 // 		.catch(err => {
-// 			if (err.response.status === 503 && isJSChallengeInRes(err.response.data)) {
+// 			if (err.response.status === 503 && javascriptChallengeInResponse(err.response.data)) {
 // 				console.log(`JS challenged detected for ${url}. Trying to solve`)
 // 				solveJSChallenge()
 			// }
 		// })
 // }
 
+//
 
-/*
-Course of action #1: getPageAndSolve() - Facade of everything
-Course of action #2: get Headers --> getPage --> isJSChallengeInRes(res) --> solveJSChallenge()
-Finally ----> return Promise of (session & solved challenge) cookies or raise Error ;-)
-* */
-
+setCookieJar(cookieJar)
 sendRequest("http://google.com")
 	.then(res => {
+		console.log(res.config.jar)
 		console.log(res)
-		console.log(cookieJar)
 	})
 	.catch(err => {
 		console.error(err)
