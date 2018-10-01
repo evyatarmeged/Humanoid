@@ -78,31 +78,26 @@ async function sendRequest(url, method=null, headers=null, userAgent=null) {
 	throw Error(`No Javascript challenge received.`)
 }
 
-
-// function getPageAndSolve(url, method="GET", userAgent=undefined, headers=undefined) {
-// 	userAgent = userAgent || getRandomUA();
-// 	headers = headers || getRequestHeaders(url, userAgent)
-// 	sendRequest(url, method, headers)
-// 		.then(res => {
-// 			console.log(`no JS challenge in sight. Got ${res.code} HTTP status code`)
-// 		})
-// 		.catch(err => {
-// 			if (err.response.status === 503 && javascriptChallengeInResponse(err.response.data)) {
-// 				console.log(`JS challenged detected for ${url}. Trying to solve`)
-// 				solveJSChallenge()
-			// }
-		// })
-// }
-
 //
+//
+// setCookieJar(cookieJar)
+// sendRequest("http://google.com")
+// 	.then(res => {
+// 		console.log(res.config.jar)
+// 		console.log(res)
+// 	})
+// 	.catch(err => {
+// 		console.error(err)
+// 	})
 
-setCookieJar(cookieJar)
-sendRequest("http://google.com")
-	.then(res => {
-		console.log(res.config.jar)
-		console.log(res)
-	})
-	.catch(err => {
-		console.error(err)
-	})
-// TODO: Add Incapsula ?
+const jsdom = require('jsdom')
+const { JSDOM } = jsdom;
+let cloudflareHTML = fs.readFileSync(__dirname + "/cloudflare_js_challenge.html").toString()
+
+/*
+Secret cloudflare eval below:
+Token = Sum of all the additions to the Object with JSFuck along the script tag
+Token.toFixed(10) - Only 10 digits after decimal
+Token += host.length (No protocol or trailing slash)
+Thank you Mozilla Firefox Debugger :-)
+* */
