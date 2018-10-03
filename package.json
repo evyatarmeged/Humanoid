@@ -11,9 +11,9 @@
   "dependencies": {
     "axios": "^0.18.0",
     "axios-cookiejar-support": "^0.4.2",
+    "cheerio": "^1.0.0-rc.2",
     "cloudscraper": "^1.5.0",
     "html": "^1.0.0",
-    "jsdom": "^12.1.0",
     "socks-proxy-agent": "^4.0.1",
     "tough-cookie": "^2.4.3",
     "url-parse": "^1.4.3"

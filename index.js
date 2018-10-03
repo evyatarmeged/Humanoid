@@ -1,7 +1,6 @@
 const fs = require("fs")
 const axios = require("axios")
-const SocksProxyAgent = require('socks-proxy-agent')
-const html = require("html")
+const cheerio = require("cheerio")
 const URL = require("url-parse")
 const tough = require('tough-cookie');
 const Cookie = tough.Cookie;
@@ -35,6 +34,7 @@ let userAgents = fs.readFileSync(__dirname + "/ua.text").toString().split("\n")
 const getRandomUA = () => userAgents[Math.floor(Math.random() * userAgents.length)]
 const getRandomTimeout = () => Math.floor(Math.random() * (8000 - 5500 + 1)) + 5500
 const extractHostFromUrl = url => URL(url).host
+
 
 
 function extractTimeoutFromHTML(htmlResponse) {
@@ -90,12 +90,26 @@ async function sendRequest(url, method=null, headers=null, userAgent=null) {
 // 		console.error(err)
 // 	})
 
-const jsdom = require('jsdom')
-const { JSDOM } = jsdom;
-let cloudflareHTML = fs.readFileSync(__dirname + "/cloudflare_js_challenge.html").toString()
+// const parseJSChallengeFromScript = script =>
+let cloudFlareHTML = fs.readFileSync(__dirname + "/cloudflare_js_challenge.html").toString()
+let $ = cheerio.load(cloudFlareHTML)
+let scriptTag = $("script").html()
+let testMatches = scriptTag.match(/(.=\+)?(\(\(!\+).*/g) // Match the challenge JSFuck
+// b = b.filter(s => s.match(/.=.(\(\(!\+).*/g) !== null) // .map(s => s.match(/(\(\(!\+).*/g)[0])
+if (testMatches.length === 2) {
+	let [resultDeclaration, resultMutation] = [...testMatches]
+	console.log(resultDeclaration) // First match, no +=+ or anything of the sort
+	console.log(resultMutation) // Second match, matches all possible operator combinations: +=, *=, -=, /=
+	
+	for (let i of resultMutation.split(";")) {
+		console.log(i.match(/(.=.)?(\(\(!\+).*/g))
+	}
+}
+// b = b.reduce(s => s.match(/(\(\(!\+).*/g))
+
 
 /*
-Secret cloudflare eval below:
+Secret CloudFlare eval below:
 Token = Sum of all the additions to the Object with JSFuck along the script tag
 Token.toFixed(10) - Only 10 digits after decimal
 Token += host.length (No protocol or trailing slash)
