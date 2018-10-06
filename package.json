@@ -13,10 +13,14 @@
     "axios-cookiejar-support": "^0.4.2",
     "cheerio": "^1.0.0-rc.2",
     "cloudscraper": "^1.5.0",
+    "eslint-config-standard": "^12.0.0",
     "html": "^1.0.0",
     "safe-eval": "^0.4.1",
     "socks-proxy-agent": "^4.0.1",
     "tough-cookie": "^2.4.3",
     "url-parse": "^1.4.3"
+  },
+  "devDependencies": {
+    "eslint": "^5.6.1"
   }
 }
