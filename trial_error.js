@@ -1,20 +1,25 @@
+const fs = require("fs");
+const axios = require("axios");
+const URL = require("url-parse");
+const tough = require("tough-cookie");
+const Response = require("./response")
+const Cookie = tough.Cookie;
 
-(function(){
-	var a = function() {try{return !!window.addEventListener} catch(e) {return !1} },
-		b = function(b, c) {a() ? document.addEventListener("DOMContentLoaded", b, c) : document.attachEvent("onreadystatechange", b)};
-	b(function(){
-		var a = document.getElementById('cf-content');a.style.display = 'block';
-		setTimeout(function(){
-			var s,t,o,p,b,r,e,a,k,i,n,g,f, OOYbsgN={"GQuWGKs":+((!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![]+[])+(!+[]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![])+(+[])+(!+[]+!![]+!![]+!![])+(+!![])+(!+[]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![])+(+!![]))/+((!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![]+[])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![]))};
-			t = document.createElement('div');
-			t.innerHTML="<a href='/'>x</a>";
-			t = t.firstChild.href;r = t.match(/https?:\/\//)[0];
-			t = t.substr(r.length); t = t.substr(0,t.length-1);
-			a = document.getElementById('jschl-answer');
-			f = document.getElementById('challenge-form');
-			;OOYbsgN.GQuWGKs*=+((!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![]+!![]+[])+(!+[]+!![])+(+[])+(!+[]+!![]+!![]+!![])+(+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![])+(!+[]+!![]+!![]))/+((!+[]+!![]+!![]+!![]+!![]+!![]+[])+(!+[]+!![]+!![])+(!+[]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![]+!![])+(+[])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]));OOYbsgN.GQuWGKs*=+((!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![]+[])+(+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![])+(+[])+(!+[]+!![]+!![]+!![])+(!+[]+!![])+(!+[]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]))/+((!+[]+!![]+!![]+!![]+!![]+!![]+[])+(!+[]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![])+(+[])+(+[])+(!+[]+!![]+!![]+!![]+!![]+!![])+(!+[]+!![]+!![]+!![]+!![]+!![]+!![]+!![]));a.value = +OOYbsgN.GQuWGKs.toFixed(10) + t.length; '; 121'
-			f.action += location.hash;
-			f.submit();
-		}, 4000);
-	}, false);
-})();
+
+// Small hack to add axios cookie support, shame it doesn't come out of the box
+// function setCookieJar(cookieJar) {
+// 	axios.interceptors.request.use(function (config) {
+// 		cookieJar.getCookies(config.url, function(err, cookies) {
+// 			config.headers.cookie = cookies.join("; ");
+// 		});
+// 		return config;
+// 	});
+
+axios.interceptors.response.use(function (response, err) {
+	if (response.status === 503 && response.data.indexOf("jschl") > -1 && response.data.indexOf("DDoS protection by Cloudflare") > -1) {
+		console.log("Challenged")
+	}
+});
+
+axios.get("http://canyoupwn.me", {validateStatus: function(status) {return status >= 200 && status < 600;}})
+.then(res=> console.log(res))

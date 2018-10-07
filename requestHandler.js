@@ -6,7 +6,7 @@ const Response = require("./response")
 const Cookie = tough.Cookie;
 
 
-// Add axios cookie support, too bad for the hacky solution tbh
+// Small hack to add axios cookie support, shame it doesn't come out of the box
 function setCookieJar(cookieJar) {
 	axios.interceptors.request.use(function (config) {
 		cookieJar.getCookies(config.url, function(err, cookies) {
@@ -21,23 +21,22 @@ function setCookieJar(cookieJar) {
 				cookieJar.setCookie(Cookie.parse(c), response.config.url, function(err, cookie){});
 			});
 		}
+		if (response.status === 503 && response)
 		return response;
 	});
 }
-
 
 class RequestHandler {
 	constructor() {
 		this.cookieJar = new tough.CookieJar();
 		this._userAgents = fs.readFileSync(__dirname + "/ua.text").toString().split("\n");
-		setCookieJar(this.cookieJar);
 		// Self explanatory funky arrow funcs
+		this.setCookieJar = () => setCookieJar(this.cookieJar);
 		this._getRandomUA = () => this._userAgents[Math.floor(Math.random() * this._userAgents.length)];
 		this._extractHostFromUrl = (url) => URL(url).host;
-	}
-	
-	javascriptChallengeInResponse(htmlResponse) {
-		return htmlResponse.indexOf("jschl") > -1 && htmlResponse.indexOf("DDoS protection by Cloudflare") > -1;
+		this.setCookieJar() // Set the jar
+		// Test for errors on module level, don't throw err when code !== 200
+		this.validateStatus = status => status >= 200 && status < 600;
 	}
 	
 	_getRequestHeaders(url) {
@@ -51,6 +50,22 @@ class RequestHandler {
 		return headers;
 	}
 	
+	async get(url, headers) {
+		return await axios.get(url, {
+			headers: headers || this._getRequestHeaders(url),
+			jar: this.cookieJar,
+			validateStatus: this.validateStatus
+		})
+	}
+	
+	async post(url, postBody, headers) {
+		axios.post(url, postBody, {
+			headers: headers || this._getRequestHeaders(url),
+			jar: this.cookieJar,
+			validateStatus: this.validateStatus
+		})
+	}
+	
 	async sendRequest(url, method=null, headers=null) {
 		try {
 			let res = await axios({
@@ -58,12 +73,9 @@ class RequestHandler {
 				url: url,
 				headers: headers || this._getRequestHeaders(url),
 				jar: this.cookieJar,
-				validateStatus: function (status) {
-					return status >= 200 && status < 600; // Test for errors on module level, don't error on code !== 200
-				}
+				validateStatus: this.validateStatus
 			})
-			
-			return new Response(res.status,res.statusText,res.headers,res.data)
+			return new Response(res.status,res.statusText,res.headers,res.data, res.config.jar)
 		} catch (err) {
 			throw Error(`An error occurred while sending the request:\n${err}`);
 		}
