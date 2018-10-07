@@ -2,6 +2,7 @@ const fs = require("fs");
 const cheerio = require("cheerio");
 const safeEval = require("safe-eval");
 const tough = require("tough-cookie");
+const Response = require("./response")
 const RequestHandler = require("./requestHandler")
 
 
@@ -37,10 +38,6 @@ class Humanoid {
 		return match;
 	}
 	
-	javascriptChallengeInResponse(html) {
-		return html.indexOf("jschl") > -1 && html.indexOf("DDoS protection by Cloudflare") > -1;
-	}
-	
 	_operateOnResult(operator, expr, result) {
 		switch(operator) {
 		case "+=":
@@ -73,18 +70,16 @@ class Humanoid {
 	async sendRequestAndSolve(url, method=null, headers=null) {}
 	
 	async get(url, headers) {
+		return await this.sendRequest(url, "GET", headers)
+	}
 	
+	async post(url, postBody, headers) {
+		return await this._requestHandler.post(url, "POST", postBody, headers)
 	}
 	
 	async sendRequest(url, method=null, headers=null) {
 		try {
-			let res = await this._requestHandler.sendRequest(url, method, headers);
-			if (res.status !== 503) {
-				return res;
-			} else if (this.javascriptChallengeInResponse(res.data)) {
-				res.isSessionChallenged = true;
-				return res;
-			}
+			return await this._requestHandler.sendRequest(url, method, headers);
 		} catch (err) {
 			if (err.response || err.request) {
 				throw Error(`Axios HTTP Error\n${err}`)
@@ -135,15 +130,6 @@ class Humanoid {
 }
 
 let humanoid = new Humanoid();
-// humanoid.sendRequest("https://canyoupwn.me")
-// 	.then(res => {
-// 		if (res.isSessionChallenged) {
-// 			humanoid.solveJSChallenge(res.data)
-//
-// 		}
-// })
 
-humanoid._requestHandler.get("http://google.com")
-	.then(res => {
-		console.log(res)
-	})
+// TODO: Check if post request sends post data (test on Flask server)
+// TODO: If true, abstract simple GET/POST methods only in Humanoid class, no need to repeat in requestHandler
