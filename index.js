@@ -1,22 +1,23 @@
-const fs = require("fs");
 const cheerio = require("cheerio");
 const safeEval = require("safe-eval");
 const tough = require("tough-cookie");
 const Response = require("./response")
-const RequestHandler = require("./requestHandler")
+const HumanoidRequester = require("./humanoidRequester")
 
 
-class Humanoid {
-	constructor( ignore_http_errors=true) {
+// TODO: Add back to class
+function javascriptChallengeInResponse(html) {
+	return html.indexOf("jschl") > -1 && html.indexOf("DDoS protection by Cloudflare") > -1;
+}
+
+function cfCookiesExist(){}
+
+
+class Humanoid extends HumanoidRequester {
+	constructor(ignoreHttpErrors=true) {
+		super(ignoreHttpErrors)
 		this._getRandomTimeout = () =>  Math.floor(Math.random() * (8000 - 5500 + 1)) + 5500;
-		this._parseOperator = expr => expr.slice(0, 2);
-		this._requestHandler = new RequestHandler();
-		
-		if (!ignore_http_errors) {
-			/* This is axios normal behavior, will throw an Error on anything that isn't an OK or a redirect
-			with the exception of a 503 HTTP status code which is, typically, the JavaScript challenge */
-			this._requestHandler.validateStatus = status => status >= 200 && status < 400 && status !== 503;
-		}
+		this.timeout = null;
 	}
 	
 	_extractInputValuesFromHTML(html) {
@@ -49,7 +50,7 @@ class Humanoid {
 		case "/=":
 			return result /= safeEval(expr);
 		default:
-			throw Error("Could not match operator. Cannot");
+			throw Error("Could not match operator. Cannot solve JS challenge");
 		}
 	}
 	
@@ -63,8 +64,8 @@ class Humanoid {
 	}
 	
 	clearCookies() {
-		this._requestHandler.cookieJar = new tough.CookieJar()
-		this._requestHandler.setCookieJar()
+		super.cookieJar = new tough.CookieJar();
+		super._patchAxios()
 	}
 	
 	async sendRequestAndSolve(url, method=null, headers=null) {}
@@ -74,27 +75,27 @@ class Humanoid {
 	}
 	
 	async post(url, postBody, headers) {
-		return await this._requestHandler.post(url, "POST", postBody, headers)
+		return await super.post(url, "POST", postBody, headers)
 	}
 	
 	async sendRequest(url, method=null, headers=null) {
+		let isSessionChallenged, isChallengeSolved = false;
 		try {
-			return await this._requestHandler.sendRequest(url, method, headers);
+			let res = await super.sendRequest(url, method, headers);
+			if (res.status === 503 && javascriptChallengeInResponse(res.data)) {
+				isSessionChallenged = true;
+			}
+			return new Response(res.status, res.statusText, res.headers,res.data, res.config.jar, isSessionChallenged);
 		} catch (err) {
 			if (err.response || err.request) {
 				throw Error(`Axios HTTP Error\n${err}`)
 			} else {
-				throw Error(`An error occurred while sending a request to ${url}:\n${err}`)
+				throw Error(err)
 			}
 		}
 	}
 	
-	// sendChallengeAnswer(vc, pass, answer) {
-	
-	// 	this._requestHandler.get({
-	// 		url
-	// 	})
-	// }
+	// sendChallengeAnswer(vc, pass, answer) {}
 	
 	solveJSChallenge(html) {
 		let answerDeclaration, answerMutations, answerValue;
@@ -130,6 +131,6 @@ class Humanoid {
 }
 
 let humanoid = new Humanoid();
-
+humanoid.get("http://google.com").then(res => {console.log(res)})
 // TODO: Check if post request sends post data (test on Flask server)
 // TODO: If true, abstract simple GET/POST methods only in Humanoid class, no need to repeat in requestHandler

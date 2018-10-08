@@ -7,10 +7,6 @@ const Cookie = tough.Cookie;
 
 
 // Small hack to add axios cookie support, shame it doesn't come out of the box
-function javascriptChallengeInResponse(html) {
-	return html.indexOf("jschl") > -1 && html.indexOf("DDoS protection by Cloudflare") > -1;
-}
-
 function setCookieJar(cookieJar) {
 	axios.interceptors.request.use(function (config) {
 		cookieJar.getCookies(config.url, function(err, cookies) {
@@ -19,29 +15,35 @@ function setCookieJar(cookieJar) {
 		return config;
 	});
 	
-	axios.interceptors.response.use(function (res) {
-		if (res.headers["set-cookie"] instanceof Array) {
-			cookies = res.headers["set-cookie"].forEach(function (c) {
-				cookieJar.setCookie(Cookie.parse(c), res.config.url, function(err, cookie){});
+	axios.interceptors.response.use(function (response) {
+		if (response.headers["set-cookie"] instanceof Array) {
+			cookies = response.headers["set-cookie"].forEach(function (c) {
+				cookieJar.setCookie(Cookie.parse(c), response.config.url, function(err, cookie){});
 			});
 		}
-		if (res.status === 503 && javascriptChallengeInResponse(res.data)) {
-			return new Response(res.status, res.statusText, res.headers, res.data, res.config.jar, true);
-		}
+		return response;
 	});
 }
 
-class RequestHandler {
-	constructor() {
+class HumanoidRequester {
+	constructor(ignoreHttpErrors=true) {
 		this.cookieJar = new tough.CookieJar();
 		this._userAgents = fs.readFileSync(__dirname + "/ua.text").toString().split("\n");
 		// Self explanatory funky arrow funcs
-		this.setCookieJar = () => setCookieJar(this.cookieJar);
 		this._getRandomUA = () => this._userAgents[Math.floor(Math.random() * this._userAgents.length)];
 		this._extractHostFromUrl = url => URL(url).host;
-		this.setCookieJar() // Set the jar
-		// Test for errors on module level, don't throw err when code !== 200
-		this.validateStatus = status => status >= 200 && status < 600;
+		this._patchAxios() // Set the jar
+		/* Test for errors on module level, don't throw err when code !== 200
+		This is axios normal behavior, will throw an Error on anything that isn't an OK or a redirect
+	  with the exception of a 503 HTTP status code which is, typically, the JavaScript challenge */
+		this.validateStatus = ignoreHttpErrors ?
+			status => status >= 200 && status < 400 && status !== 503
+			:
+			status => status >= 200 && status < 600
+	}
+	
+	_patchAxios() {
+		setCookieJar(this.cookieJar);
 	}
 	
 	_getRequestHeaders(url) {
@@ -78,4 +80,4 @@ class RequestHandler {
 	}
 }
 
-module.exports = RequestHandler;
+module.exports = HumanoidRequester;

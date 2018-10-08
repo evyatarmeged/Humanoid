@@ -7,7 +7,7 @@
 //
 //
 // // Small hack to add axios cookie support, shame it doesn't come out of the box
-// // function setCookieJar(cookieJar) {
+// // function patchAxios(cookieJar) {
 // // 	axios.interceptors.request.use(function (config) {
 // // 		cookieJar.getCookies(config.url, function(err, cookies) {
 // // 			config.headers.cookie = cookies.join("; ");
