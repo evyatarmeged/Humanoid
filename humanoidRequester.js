@@ -37,7 +37,7 @@ class HumanoidRequester {
 		This is axios normal behavior, will throw an Error on anything that isn't an OK or a redirect
 	  with the exception of a 503 HTTP status code which is, typically, the JavaScript challenge */
 		this.validateStatus = ignoreHttpErrors ?
-			status => status >= 200 && status < 400 && status !== 503
+			status => status === 503 ? true : status >= 200 && status < 400
 			:
 			status => status >= 200 && status < 600
 	}
@@ -57,22 +57,17 @@ class HumanoidRequester {
 		return headers;
 	}
 	
-	async post(url, postBody, headers) {
-		axios.post(url, postBody, {
-			headers: headers || this._getRequestHeaders(url),
-			jar: this.cookieJar,
-			validateStatus: this.validateStatus
-		})
-	}
-	
-	async sendRequest(url, method=null, headers=null) {
+	async sendRequest(url, data=null, method=null, headers=null) {
+		if (method.toUpperCase() === "POST" && !data) throw Error("Cannot send POST request with empty body");
+		
 		try {
 			return await axios({
 				method: method || "GET",
 				url: url,
 				headers: headers || this._getRequestHeaders(url),
 				jar: this.cookieJar,
-				validateStatus: this.validateStatus
+				validateStatus: this.validateStatus,
+				data: data
 			})
 		} catch (err) {
 			throw Error(`An error occurred while sending the request:\n${err}`);

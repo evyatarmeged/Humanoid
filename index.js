@@ -5,26 +5,19 @@ const Response = require("./response")
 const HumanoidRequester = require("./humanoidRequester")
 
 
-// TODO: Add back to class
-function javascriptChallengeInResponse(html) {
-	return html.indexOf("jschl") > -1 && html.indexOf("DDoS protection by Cloudflare") > -1;
-}
-
-function cfCookiesExist(){}
-
 
 class Humanoid extends HumanoidRequester {
 	constructor(ignoreHttpErrors=true) {
 		super(ignoreHttpErrors)
 		this._getRandomTimeout = () =>  Math.floor(Math.random() * (8000 - 5500 + 1)) + 5500;
-		this.timeout = null;
+		this.timeout = undefined;
 	}
 	
 	_extractInputValuesFromHTML(html) {
 		let $ = cheerio.load(html);
 		return [$("input[name=jschl_vc]").val(), $("input[name=pass]").val()]
 	}
-
+	
 	_extractChallengeFromHTML(html) {
 		let $ = cheerio.load(html);
 		let script = $("script");
@@ -39,18 +32,22 @@ class Humanoid extends HumanoidRequester {
 		return match;
 	}
 	
+	javascriptChallengeInResponse(html) {
+		return html.indexOf("jschl") > -1 && html.indexOf("DDoS protection by Cloudflare") > -1;
+	}
+	
 	_operateOnResult(operator, expr, result) {
 		switch(operator) {
-		case "+=":
-			return result += safeEval(expr);
-		case "*=":
-			return result *= safeEval(expr);
-		case "-=":
-			return result -= safeEval(expr);
-		case "/=":
-			return result /= safeEval(expr);
-		default:
-			throw Error("Could not match operator. Cannot solve JS challenge");
+			case "+=":
+				return result += safeEval(expr);
+			case "*=":
+				return result *= safeEval(expr);
+			case "-=":
+				return result -= safeEval(expr);
+			case "/=":
+				return result /= safeEval(expr);
+			default:
+				throw Error("Could not match operator. Cannot solve JS challenge");
 		}
 	}
 	
@@ -68,21 +65,21 @@ class Humanoid extends HumanoidRequester {
 		super._patchAxios()
 	}
 	
-	async sendRequestAndSolve(url, method=null, headers=null) {}
+	async sendRequestAndSolve(url, method=undefined, headers=undefined, ignoreNoChallenge=false) {}
 	
-	async get(url, headers) {
-		return await this.sendRequest(url, "GET", headers)
+	async get(url, queryString=undefined, headers=undefined) {
+		return await this.sendRequest(url, queryString, "GET", headers)
 	}
 	
-	async post(url, postBody, headers) {
-		return await super.post(url, "POST", postBody, headers)
+	async post(url, postBody=undefined, headers=undefined) {
+		return await this.sendRequest(url, postBody, "POST", headers)
 	}
 	
-	async sendRequest(url, method=null, headers=null) {
+	async sendRequest(url, data=undefined, method=undefined, headers=undefined) {
 		let isSessionChallenged, isChallengeSolved = false;
 		try {
-			let res = await super.sendRequest(url, method, headers);
-			if (res.status === 503 && javascriptChallengeInResponse(res.data)) {
+			let res = await super.sendRequest(url, data, method, headers);
+			if (res.status === 503 && this.javascriptChallengeInResponse(res.data)) {
 				isSessionChallenged = true;
 			}
 			return new Response(res.status, res.statusText, res.headers,res.data, res.config.jar, isSessionChallenged);
@@ -131,6 +128,16 @@ class Humanoid extends HumanoidRequester {
 }
 
 let humanoid = new Humanoid();
-humanoid.get("http://google.com").then(res => {console.log(res)})
-// TODO: Check if post request sends post data (test on Flask server)
-// TODO: If true, abstract simple GET/POST methods only in Humanoid class, no need to repeat in requestHandler
+humanoid.sendRequest("http://localhost:5000", null, "post").then(res=>console.log(res)).catch(err=>console.error(err))
+// Full run test below
+// humanoid.sendRequest("http://google.com").then(res => {
+// 	console.log(res instanceof Response);
+// 	console.log(humanoid.cookieJar)
+// 	humanoid.clearCookies();
+// 	console.log(humanoid.cookieJar)
+// 	humanoid.get("http://www.amazon.com").then(res=> {
+// 		console.log(res instanceof Response);
+// 		console.log(humanoid.cookieJar);
+// 	})
+// })
+// Full run test ends
