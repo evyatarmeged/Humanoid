@@ -31,7 +31,6 @@ class HumanoidRequester {
 		this._userAgents = fs.readFileSync(__dirname + "/ua.text").toString().split("\n");
 		// Self explanatory funky arrow funcs
 		this._getRandomUA = () => this._userAgents[Math.floor(Math.random() * this._userAgents.length)];
-		this._extractHostFromUrl = url => URL(url).host;
 		this._patchAxios() // Set the jar
 		/* Test for errors on module level, don't throw err when code !== 200
 		This is axios normal behavior, will throw an Error on anything that isn't an OK or a redirect
@@ -46,9 +45,14 @@ class HumanoidRequester {
 		setCookieJar(this.cookieJar);
 	}
 	
+	parseUrl(url) {
+		return URL(url);
+	}
+	
+	
 	_getRequestHeaders(url) {
 		let headers = {};
-		headers["Host"] = this._extractHostFromUrl(url);
+		headers["Host"] = this.parseUrl(url).host;
 		headers["Connection"] = "keep-alive";
 		headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 		headers["Accept-Encoding"] = "gzip, deflate, br";
@@ -58,8 +62,9 @@ class HumanoidRequester {
 	}
 	
 	async sendRequest(url, data=null, method=null, headers=null) {
-		if (method.toUpperCase() === "POST" && !data) throw Error("Cannot send POST request with empty body");
-		
+		if (method && method.toUpperCase() === "POST" && !data) {
+			throw Error("Cannot send POST request with empty body");
+		}
 		try {
 			return await axios({
 				method: method || "GET",

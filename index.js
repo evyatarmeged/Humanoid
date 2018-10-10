@@ -5,12 +5,13 @@ const Response = require("./response")
 const HumanoidRequester = require("./humanoidRequester")
 
 
-
 class Humanoid extends HumanoidRequester {
-	constructor(ignoreHttpErrors=true) {
+	constructor(ignoreHttpErrors=true, autoRetry=false, maxRetries=3) {
 		super(ignoreHttpErrors)
 		this._getRandomTimeout = () =>  Math.floor(Math.random() * (8000 - 5500 + 1)) + 5500;
 		this.timeout = undefined;
+		this.autoRetry = autoRetry;
+		this.maxRetries = maxRetries;
 	}
 	
 	_extractInputValuesFromHTML(html) {
@@ -76,13 +77,19 @@ class Humanoid extends HumanoidRequester {
 	}
 	
 	async sendRequest(url, data=undefined, method=undefined, headers=undefined) {
-		let isSessionChallenged, isChallengeSolved = false;
+		let parsedUrl = super.parseUrl(url);
+		let isSessionChallenged = false;
 		try {
 			let res = await super.sendRequest(url, data, method, headers);
 			if (res.status === 503 && this.javascriptChallengeInResponse(res.data)) {
 				isSessionChallenged = true;
 			}
-			return new Response(res.status, res.statusText, res.headers,res.data, res.config.jar, isSessionChallenged);
+			let {host, origin} = {host: parsedUrl.host, origin: parsedUrl.origin};
+			return new Response(
+				res.status,res.statusText, res.headers, res.data,
+				host, url, origin, res.config.jar, isSessionChallenged
+			);
+		
 		} catch (err) {
 			if (err.response || err.request) {
 				throw Error(`Axios HTTP Error\n${err}`)
@@ -92,9 +99,29 @@ class Humanoid extends HumanoidRequester {
 		}
 	}
 	
-	// sendChallengeAnswer(vc, pass, answer) {}
+	async sendChallengeAnswer(originUrl, vc, pass, answer) {
+		let solved = false;
+		let destUrl = `${originUrl}/cdn-cgi/l/chk_jschl?jschl_vc=${vc}&pass=${pass}&jschl_answer=${answer}`;
+		let res = await this.get(destUrl);
+		if (res.status === 200) {
+			solved = true;
+		} else {
+			if (res === 503 && this.autoRetry) {
+				return await this.solveJSChallenge(res);
+			}
+		}
+		res.isChallengeSolved = solved;
+		return res;
+	}
 	
-	solveJSChallenge(html) {
+	async asyncTimeout(ms) {
+		return new Promise(resolve => {
+			setTimeout(resolve, ms);
+		});
+	}
+	
+	async solveJSChallenge(response) {
+		let {html, origin} = {html: response.data, origin: response.origin};
 		let answerDeclaration, answerMutations, answerValue;
 		let script = this._extractChallengeFromHTML(html);
 		let [vc, pass] = [...this._extractInputValuesFromHTML(html)]
@@ -114,11 +141,11 @@ class Humanoid extends HumanoidRequester {
 					.map(s => s[0])
 				
 				answerValue = this._buildAnswer(answerMutations, safeEval(answerDeclaration));
-				answerValue = answerValue.toFixed(10);
-				console.log(answerValue)
-				console.log(timeout)
-				console.log(html)
-				
+				answerValue = parseFloat(answerValue.toFixed(10)) + response.origin.length
+				// Wait the necessary timeout
+				await this.asyncTimeout(timeout);
+				// Send the solution with the designated values
+				return await this.sendChallengeAnswer(origin, vc, pass, answerValue)
 			}
 		} catch (err) {
 			throw Error(`Could not solve or parse JavaScript challenge. Caused due to error:\n${err}`);
@@ -128,16 +155,14 @@ class Humanoid extends HumanoidRequester {
 }
 
 let humanoid = new Humanoid();
-humanoid.sendRequest("http://localhost:5000", null, "post").then(res=>console.log(res)).catch(err=>console.error(err))
-// Full run test below
-// humanoid.sendRequest("http://google.com").then(res => {
-// 	console.log(res instanceof Response);
-// 	console.log(humanoid.cookieJar)
-// 	humanoid.clearCookies();
-// 	console.log(humanoid.cookieJar)
-// 	humanoid.get("http://www.amazon.com").then(res=> {
-// 		console.log(res instanceof Response);
-// 		console.log(humanoid.cookieJar);
-// 	})
-// })
-// Full run test ends
+humanoid.sendRequest("https://canyoupwn.me")
+	.then(res => {
+		console.log(`Initial Response:\n`, res)
+		if (res.isSessionChallenged) {
+			humanoid.solveJSChallenge(res)
+				.then(res => {
+					console.log(res)
+				})
+		}
+	})
+	.catch(err=>console.error(err))
