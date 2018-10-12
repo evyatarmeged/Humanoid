@@ -2,7 +2,6 @@ const fs = require("fs");
 const axios = require("axios");
 const URL = require("url-parse");
 const tough = require("tough-cookie");
-const Response = require("./response")
 const Cookie = tough.Cookie;
 
 
@@ -28,17 +27,17 @@ function setCookieJar(cookieJar) {
 class HumanoidRequester {
 	constructor(ignoreHttpErrors=true) {
 		this.cookieJar = new tough.CookieJar();
-		this._userAgents = fs.readFileSync(__dirname + "/ua.text").toString().split("\n");
-		// Self explanatory funky arrow funcs
-		this._getRandomUA = () => this._userAgents[Math.floor(Math.random() * this._userAgents.length)];
-		this._patchAxios() // Set the jar
-		/* Test for errors on module level, don't throw err when code !== 200
-		This is axios normal behavior, will throw an Error on anything that isn't an OK or a redirect
-	  with the exception of a 503 HTTP status code which is, typically, the JavaScript challenge */
+		this._userAgentList = fs.readFileSync(__dirname + "/ua.text").toString().split("\n");
+		this.UA = this._getRandomUA(); // set UserAgent
+		this._patchAxios(); // Set the jar
 		this.validateStatus = ignoreHttpErrors ?
 			status => status === 503 ? true : status >= 200 && status < 400
 			:
 			status => status >= 200 && status < 600
+	}
+	
+	_getRandomUA() {
+		return this._userAgentList[Math.floor(Math.random() * this._userAgentList.length)];
 	}
 	
 	_patchAxios() {
@@ -49,14 +48,15 @@ class HumanoidRequester {
 		return URL(url);
 	}
 	
-	
 	_getRequestHeaders(url) {
 		let headers = {};
-		headers["Host"] = this.parseUrl(url).host;
-		headers["Connection"] = "keep-alive";
 		headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 		headers["Accept-Encoding"] = "gzip, deflate, br";
-		headers["User-Agent"] = this._getRandomUA();
+		headers["Accept-Language"] = "en-US,en;q=0.5";
+		headers["Connection"] = "keep-alive";
+		headers["Host"] = this.parseUrl(url).host;
+		headers["Upgrade-Insecure-Requests"] = "1";
+		headers["User-Agent"] = this.UA;
 		
 		return headers;
 	}
@@ -66,7 +66,7 @@ class HumanoidRequester {
 			throw Error("Cannot send POST request with empty body");
 		}
 		try {
-			return await axios({
+			let res = await axios({
 				method: method || "GET",
 				url: url,
 				headers: headers || this._getRequestHeaders(url),
@@ -74,6 +74,7 @@ class HumanoidRequester {
 				validateStatus: this.validateStatus,
 				data: data
 			})
+			return res;
 		} catch (err) {
 			throw Error(`An error occurred while sending the request:\n${err}`);
 		}
