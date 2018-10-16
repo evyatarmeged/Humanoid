@@ -5,8 +5,8 @@ const HumanoidReqHandler = require("./humanoidReqHandler")
 
 class Humanoid extends HumanoidReqHandler {
 	// TODO: Implement c'tor params: autoRetry=false, maxRetries=3
-	constructor(ignoreHttpErrors=true) {
-		super(ignoreHttpErrors)
+	constructor() {
+		super()
 		this._getRandomTimeout = () => Math.floor(Math.random() * (7000 - 5000 + 1)) + 5000;
 		this.timeout = undefined;
 		// this.autoRetry = autoRetry;
@@ -40,25 +40,34 @@ class Humanoid extends HumanoidReqHandler {
 		}
 	}
 	
-	async sendRequestAndSolve(url, method=undefined, headers=undefined, ignoreNoChallenge=false) {
-	}
-	
+	// async sendRequestAndSolve(url, method=undefined, headers=undefined, ignoreNoChallenge=false) {
+	// }
+	//
 	async get(url, queryString=undefined, headers=undefined) {
+		return await this.sendRequest(url, "GET", queryString, headers)
 	}
 	
-	async post(url, postBody=undefined, headers=undefined) {
+	async post(url, postBody=undefined, headers=undefined, dataType=undefined) {
+		return await this.sendRequest(url, "POST", postBody, headers, dataType)
 	}
 	
 	async sendRequest(url, method=undefined, data=undefined, headers=undefined, dataType=undefined) {
 		let response = await super.sendRequest(url, method, data, headers, dataType);
+		console.log(`Got ${response.statusCode}`)
 		if (response.statusCode === 503 && this.isChallengeInResponse(response.body)) {
-			return await this._bypassJSChallenge(response);
+			let challengeResponse = await this._bypassJSChallenge(response);
+			// Session is definitely challenged
+			challengeResponse.isSessionChallenged = true;
+			// If we got a 200, mark challenge and solved and return
+			challengeResponse.isChallengeSolved = challengeResponse.statusCode === 200;
+			return challengeResponse;
 		}
+		return response;
 	}
 	
 	async _bypassJSChallenge(response) {
 		let {...solution} = Solver.solveChallenge(response);
-		let timeout = Solver._extractTimeoutFromScript(response.data) || this._getRandomTimeout();
+		let timeout = Solver._extractTimeoutFromScript(response.body) || this._getRandomTimeout();
 		if (![solution.vc, solution.pass, solution.answer, solution.origin].every(elem => !!elem)) {
 			throw Error(`Failed to Extract one or more necessary values.
 			Values obtained:
@@ -74,11 +83,13 @@ class Humanoid extends HumanoidReqHandler {
 			headers["Referer"] = response.origin;
 			
 			// Examine this and continue
-			let responseForChal = await this.sendRequest(answerUrl, "GET", answerObj, headers)
-			
+			return await this.sendRequest(answerUrl, "GET", answerObj, headers);
 		}
 	}
 }
 	
 let humanoid = new Humanoid();
 humanoid.sendRequest("https://canyoupwn.me/")
+	.then(res => {
+		console.log(res)
+	})

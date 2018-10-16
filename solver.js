@@ -7,7 +7,7 @@ class Solver {
 	
 	static _extractTimeoutFromScript(html) {
 		let $ = cheerio.load(html);
-		let script = $("script");
+		let script = $("script").html();
 		let match = script.match(/,\s[0-9]0{3}\);/g);
 		if (match) {
 			match = match[0].replace(/,|\s|\)|;/g, "");
@@ -45,39 +45,49 @@ class Solver {
 		for (let ans of answerMutations) {
 			let operator = ans.slice(0,2);
 			let expr = ans.slice(3);
-			currResult = Solver._operateOnResult(operator, expr, currResult);
+			currResult = this._operateOnResult(operator, expr, currResult);
 		}
 		return currResult;
 	}
 	
+	static _parseChallenge(matches) {
+		// Perform the necessary parsing on both challenge parts
+		let [challengeInit, challengeMutations] = [...matches];
+		// Perform the necessary parsing
+		challengeInit = challengeInit.replace(/[;}]/g, "");
+		challengeMutations = challengeMutations
+			.split(";")
+			.map(s => s.match(/(.=.)?(\(\(!\+).*/g))
+			.filter(s => s !== null)
+			.map(s => s[0])
+	
+		return challengeInit, challengeMutations;
+	}
+	
+	static _matchChallengeFromScript(script) {
+		let testMatches = script.match(/(.=\+)?(\(\(!\+).*/g); // Match the challenge part
+		if (testMatches.length === 2) {
+			return testMatches;
+		}
+		throw Error("Failed to match JS challenge with Regular Expressions")
+	}
+
 	static solveChallenge(response) {
-		// TODO: We need the length of the URL without the protocol or forward slash
-		// TODO: Origin == Referer, Host == t.length to add to the answer
-		let {html, host, origin} = {html: response.data, host: response.host, origin: response.origin};
-		let answerDeclaration, answerMutations, answer;
-		let script = Solver._extractChallengeFromHTML(html);
-		let [vc, pass] = [...Solver._extractInputValuesFromHTML(html)];
+		let {html, host, origin} = {html: response.body, host: response.host, origin: response.origin};
+		let script = this._extractChallengeFromHTML(html);
+		let [vc, pass] = [...this._extractInputValuesFromHTML(html)];
 		
 		try {
 			// Parse only the actual math challenge parts from the script tag and assign them
-			let testMatches = script.match(/(.=\+)?(\(\(!\+).*/g); // Match the challenge part
-			if (testMatches.length === 2) {
-				[answerDeclaration, answerMutations] = [...testMatches];
-				// Perform the necessary parsing
-				answerDeclaration = answerDeclaration.replace(/[;}]/g, "");
-				answerMutations = answerMutations
-					.split(";")
-					.map(s => s.match(/(.=.)?(\(\(!\+).*/g))
-					.filter(s => s !== null)
-					.map(s => s[0])
-				answer = Solver._buildAnswer(answerMutations, safeEval(answerDeclaration));
-				answer = parseFloat(answer.toFixed(10)) + host.length;
-				return {vc: vc, pass: pass, answer: answer, origin: origin}
-			}
+			let challengeMatches = this._matchChallengeFromScript(script);
+			let [challengeInit, challengeMutations] = this._parseChallenge(challengeMatches);
+			let answer = this._buildAnswer(challengeMutations, safeEval(challengeInit));
+			answer = parseFloat(answer.toFixed(10)) + host.length;
+			
+			return {vc: vc, pass: pass, answer: answer, origin: origin}
 		} catch (err) {
 			throw Error(`Could not solve or parse JavaScript challenge. Caused due to error:\n${err}`);
 		}
-		throw Error("Failed to match JS challenge with Regular Expressions")
 	}
 }
 

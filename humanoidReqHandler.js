@@ -5,7 +5,7 @@ const Response = require("./response");
 
 
 class HumanoidReqHandler {
-	constructor(ignoreHttpErrors = true) {
+	constructor() {
 		this.cookieJar = rpn.jar()
 		this._userAgentList = fs.readFileSync(__dirname + "/ua.text").toString().split("\n");
 		this.UA = this._getRandomUA(); // Set UserAgent
@@ -67,7 +67,6 @@ class HumanoidReqHandler {
 		
 		// Send the request
 		let res = await rpn(url, currConfig);
-		console.log(res)
 		return new Response(
 			res.statusCode,
 			res.statusMessage,res.headers,
