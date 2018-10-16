@@ -16,7 +16,7 @@
 // // 	});
 //
 // axios.interceptors.response.use(function (response, err) {
-// 	if (response.status === 503 && response.data.indexOf("jschl") > -1 && response.data.indexOf("DDoS protection by Cloudflare") > -1) {
+// 	if (response.status === 503 && response.body.indexOf("jschl") > -1 && response.body.indexOf("DDoS protection by Cloudflare") > -1) {
 // 		console.log("Challenged")
 // 	}
 // });

@@ -1,5 +1,5 @@
 {
-  "name": "I-am-human",
+  "name": "Humanoid",
   "version": "0.0.1",
   "description": "Node.js package that solves CloudFlare's anti-bot JavaScript challenges",
   "main": "index.js",
@@ -9,16 +9,12 @@
   "author": "Evyatar Meged",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.18.0",
-    "axios-cookiejar-support": "^0.4.2",
     "cheerio": "^1.0.0-rc.2",
     "cloudscraper": "^1.5.0",
     "eslint-config-standard": "^12.0.0",
-    "html": "^1.0.0",
-    "querystring": "^0.2.0",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5",
     "safe-eval": "^0.4.1",
-    "socks-proxy-agent": "^4.0.1",
-    "tough-cookie": "^2.4.3",
     "url-parse": "^1.4.3"
   },
   "devDependencies": {

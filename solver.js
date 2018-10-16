@@ -6,7 +6,9 @@ class Solver {
 	constructor() {}
 	
 	static _extractTimeoutFromScript(html) {
-		let match = html.match(/,\s[0-9]0{3}\);/g);
+		let $ = cheerio.load(html);
+		let script = $("script");
+		let match = script.match(/,\s[0-9]0{3}\);/g);
 		if (match) {
 			match = match[0].replace(/,|\s|\)|;/g, "");
 		}
@@ -49,11 +51,12 @@ class Solver {
 	}
 	
 	static solveChallenge(response) {
+		// TODO: We need the length of the URL without the protocol or forward slash
+		// TODO: Origin == Referer, Host == t.length to add to the answer
 		let {html, host, origin} = {html: response.data, host: response.host, origin: response.origin};
 		let answerDeclaration, answerMutations, answer;
 		let script = Solver._extractChallengeFromHTML(html);
 		let [vc, pass] = [...Solver._extractInputValuesFromHTML(html)];
-		let timeout = Solver._extractTimeoutFromScript(html);
 		
 		try {
 			// Parse only the actual math challenge parts from the script tag and assign them
@@ -69,8 +72,7 @@ class Solver {
 					.map(s => s[0])
 				answer = Solver._buildAnswer(answerMutations, safeEval(answerDeclaration));
 				answer = parseFloat(answer.toFixed(10)) + host.length;
-				
-				return {vc: vc, pass: pass, answer: answer, timeout:timeout, originUrl: origin}
+				return {vc: vc, pass: pass, answer: answer, origin: origin}
 			}
 		} catch (err) {
 			throw Error(`Could not solve or parse JavaScript challenge. Caused due to error:\n${err}`);
