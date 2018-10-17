@@ -60,8 +60,8 @@ class Solver {
 			.map(s => s.match(/(.=.)?(\(\(!\+).*/g))
 			.filter(s => s !== null)
 			.map(s => s[0])
-	
-		return challengeInit, challengeMutations;
+		
+		return [challengeInit, challengeMutations]
 	}
 	
 	static _matchChallengeFromScript(script) {

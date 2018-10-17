@@ -4,7 +4,8 @@
   "description": "Node.js package that solves CloudFlare's anti-bot JavaScript challenges",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./issue.js"
   },
   "author": "Evyatar Meged",
   "license": "ISC",
@@ -12,6 +13,7 @@
     "cheerio": "^1.0.0-rc.2",
     "cloudscraper": "^1.5.0",
     "eslint-config-standard": "^12.0.0",
+    "iltorb": "^2.4.0",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.5",
     "safe-eval": "^0.4.1",

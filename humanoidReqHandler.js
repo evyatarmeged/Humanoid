@@ -2,6 +2,7 @@ const fs = require("fs");
 const rpn = require("request-promise-native");
 const URL = require("url-parse");
 const Response = require("./response");
+const brotli = require('iltorb');
 
 
 class HumanoidReqHandler {
@@ -12,7 +13,9 @@ class HumanoidReqHandler {
 		this.config = {  // Set default config values
 			resolveWithFullResponse: true,
 			jar: this.cookieJar,
-			simple: false
+			simple: false,
+			gzip: true,
+			encoding: null
 		}
 	}
 	
@@ -38,6 +41,11 @@ class HumanoidReqHandler {
 			}
 		}
 		return config;
+	}
+	
+	async _decompressBrotli(res) {
+		res.body = await brotli.decompress(res.body);
+		return res;
 	}
 	
 	_getRequestHeaders(url) {
@@ -67,16 +75,17 @@ class HumanoidReqHandler {
 		
 		// Send the request
 		let res = await rpn(url, currConfig);
+		// Decompress Brotli content-type if returned (Unsupported natively by `request`)
+		res = res.headers["content-encoding"] === "br" ? await this._decompressBrotli(res) : res;
+		res.body = res.body.toString();
+		
+		
 		return new Response(
 			res.statusCode,
 			res.statusMessage,res.headers,
 			res.body, parsedURL.host,
 			parsedURL.origin, this.cookieJar
 		)
-		
-		// console.log(res.statusMessage)
-		// console.log(res.headers)
-		// console.log(res.statusCode)
 	}
 }
 

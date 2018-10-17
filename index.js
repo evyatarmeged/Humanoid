@@ -1,16 +1,16 @@
 const request = require("request-promise-native");
-const Solver = require("./solver")
-const HumanoidReqHandler = require("./humanoidReqHandler")
+const Solver = require("./solver");
+const HumanoidReqHandler = require("./humanoidReqHandler");
 
 
 class Humanoid extends HumanoidReqHandler {
-	// TODO: Implement c'tor params: autoRetry=false, maxRetries=3
-	constructor() {
+	// TODO: Implement c'tor params: maxRetries=3
+	constructor(maxRetries=3) {
 		super()
 		this._getRandomTimeout = () => Math.floor(Math.random() * (7000 - 5000 + 1)) + 5000;
-		this.timeout = undefined;
-		// this.autoRetry = autoRetry;
-		// this.maxRetries = maxRetries;
+		this.maxRetries = maxRetries;
+		this.currMaxRetries = maxRetries;
+		this._resetCurrMaxRetries = () => this.currMaxRetries = this.maxRetries;
 	}
 	
 	isChallengeInResponse(html) {
@@ -51,17 +51,29 @@ class Humanoid extends HumanoidReqHandler {
 		return await this.sendRequest(url, "POST", postBody, headers, dataType)
 	}
 	
+	/*
+	TODO: Consider moving "isSessionChallenged" test to reqHandler and return it to humanoid's sendRequest
+	TODO: as part of the abstraction of sendReqAndSolve vs the client's manual sendReq
+	 */
 	async sendRequest(url, method=undefined, data=undefined, headers=undefined, dataType=undefined) {
 		let response = await super.sendRequest(url, method, data, headers, dataType);
 		console.log(`Got ${response.statusCode}`)
 		if (response.statusCode === 503 && this.isChallengeInResponse(response.body)) {
+			console.log("[!] CloudFlare JavaScript challenge detected. Solving...")
+			if  (--this.currMaxRetries <= 0) {
+				this._resetCurrMaxRetries();
+				throw Error("Max retries limit reached. Cannot Solve JavaScript challenge from response:\n" + response)
+			}
 			let challengeResponse = await this._bypassJSChallenge(response);
 			// Session is definitely challenged
 			challengeResponse.isSessionChallenged = true;
 			// If we got a 200, mark challenge and solved and return
 			challengeResponse.isChallengeSolved = challengeResponse.statusCode === 200;
+			console.log("[+] JavaScript challenge solved successfully")
+			this._resetCurrMaxRetries()
 			return challengeResponse;
 		}
+		this._resetCurrMaxRetries()
 		return response;
 	}
 	
@@ -82,14 +94,16 @@ class Humanoid extends HumanoidReqHandler {
 			let headers = super._getRequestHeaders(answerUrl);
 			headers["Referer"] = response.origin;
 			
-			// Examine this and continue
 			return await this.sendRequest(answerUrl, "GET", answerObj, headers);
 		}
 	}
 }
-	
+
 let humanoid = new Humanoid();
-humanoid.sendRequest("https://canyoupwn.me/")
+humanoid.sendRequest("https://canyoupwn.me")
 	.then(res => {
 		console.log(res)
+	})
+	.catch(err => {
+		console.error(err)
 	})
