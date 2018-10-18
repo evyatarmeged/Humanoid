@@ -43,6 +43,10 @@ class HumanoidReqHandler {
 		return config;
 	}
 	
+	isChallengeInResponse(html) {
+		return html.indexOf("jschl") > -1 && html.indexOf("DDoS protection by Cloudflare") > -1;
+	}
+	
 	async _decompressBrotli(res) {
 		res.body = await brotli.decompress(res.body);
 		return res;
@@ -62,7 +66,7 @@ class HumanoidReqHandler {
 	async sendRequest(url, method=undefined, data=undefined, headers=undefined, dataType="form") {
 		// Sanitize parameters
 		let parsedURL = this._parseUrl(url);
-		
+		let isSessionChallenged = false;
 		headers = headers || this._getRequestHeaders(url);
 		headers["Host"] = !headers.Host ? parsedURL.host : headers["Host"];
 		method = method !== undefined ? method.toUpperCase() : "GET";
@@ -79,13 +83,15 @@ class HumanoidReqHandler {
 		res = res.headers["content-encoding"] === "br" ? await this._decompressBrotli(res) : res;
 		res.body = res.body.toString();
 		
-		
+		if (res.statusCode === 503 && this.isChallengeInResponse(res.body)) {
+			// Session is definitely challenged
+			isSessionChallenged = true;
+		}
 		return new Response(
-			res.statusCode,
-			res.statusMessage,res.headers,
-			res.body, parsedURL.host,
-			parsedURL.origin, this.cookieJar
-		)
+			res.statusCode, res.statusMessage,
+			res.headers, res.body,
+			parsedURL.host, parsedURL.origin,
+			res.cookies, isSessionChallenged)
 	}
 }
 

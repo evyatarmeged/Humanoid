@@ -4,10 +4,10 @@ const HumanoidReqHandler = require("./humanoidReqHandler");
 
 
 class Humanoid extends HumanoidReqHandler {
-	// TODO: Implement c'tor params: maxRetries=3
-	constructor(maxRetries=3) {
+	constructor(autoBypass=true, maxRetries=3) {
 		super()
 		this._getRandomTimeout = () => Math.floor(Math.random() * (7000 - 5000 + 1)) + 5000;
+		this.autoBypass = autoBypass;
 		this.maxRetries = maxRetries;
 		this.currMaxRetries = maxRetries;
 		this._resetCurrMaxRetries = () => this.currMaxRetries = this.maxRetries;
@@ -40,9 +40,6 @@ class Humanoid extends HumanoidReqHandler {
 		}
 	}
 	
-	// async sendRequestAndSolve(url, method=undefined, headers=undefined, ignoreNoChallenge=false) {
-	// }
-	//
 	async get(url, queryString=undefined, headers=undefined) {
 		return await this.sendRequest(url, "GET", queryString, headers)
 	}
@@ -57,21 +54,21 @@ class Humanoid extends HumanoidReqHandler {
 	 */
 	async sendRequest(url, method=undefined, data=undefined, headers=undefined, dataType=undefined) {
 		let response = await super.sendRequest(url, method, data, headers, dataType);
-		console.log(`Got ${response.statusCode}`)
-		if (response.statusCode === 503 && this.isChallengeInResponse(response.body)) {
-			console.log("[!] CloudFlare JavaScript challenge detected. Solving...")
-			if  (--this.currMaxRetries <= 0) {
-				this._resetCurrMaxRetries();
-				throw Error("Max retries limit reached. Cannot Solve JavaScript challenge from response:\n" + response)
+		if (response.isSessionChallenged) {
+			console.log("[!] CloudFlare JavaScript challenge detected.")
+			if (this.autoBypass) {
+				if  (--this.currMaxRetries <= 0) {
+					this._resetCurrMaxRetries();
+					throw Error("Max retries limit reached. Cannot Solve JavaScript challenge from response:\n" + response)
+				}	else {
+					let challengeResponse = await this._bypassJSChallenge(response);
+					// If we got a 200, mark challenge and solved and return
+					challengeResponse.isChallengeSolved = challengeResponse.statusCode === 200;
+					console.log("[+] JavaScript challenge solved successfully")
+					this._resetCurrMaxRetries()
+					return challengeResponse;
+				}
 			}
-			let challengeResponse = await this._bypassJSChallenge(response);
-			// Session is definitely challenged
-			challengeResponse.isSessionChallenged = true;
-			// If we got a 200, mark challenge and solved and return
-			challengeResponse.isChallengeSolved = challengeResponse.statusCode === 200;
-			console.log("[+] JavaScript challenge solved successfully")
-			this._resetCurrMaxRetries()
-			return challengeResponse;
 		}
 		this._resetCurrMaxRetries()
 		return response;
@@ -94,16 +91,13 @@ class Humanoid extends HumanoidReqHandler {
 			let headers = super._getRequestHeaders(answerUrl);
 			headers["Referer"] = response.origin;
 			
-			return await this.sendRequest(answerUrl, "GET", answerObj, headers);
+			let solvedChallengeRes = await this.get(answerUrl, answerObj, headers);
+			// All requests that reached here were from a challenged session
+			solvedChallengeRes.isSessionChallenged = true;
+			
+			return solvedChallengeRes;
 		}
 	}
 }
-
-let humanoid = new Humanoid();
-humanoid.sendRequest("https://canyoupwn.me")
-	.then(res => {
-		console.log(res)
-	})
-	.catch(err => {
-		console.error(err)
-	})
+// TODO: Add quiet mode for stdout stuff (Read about JS loggers \o/)
+module.exports = Humanoid;
