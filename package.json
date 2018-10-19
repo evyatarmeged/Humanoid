@@ -13,6 +13,7 @@
     "cheerio": "^1.0.0-rc.2",
     "cloudscraper": "^1.5.0",
     "eslint-config-standard": "^12.0.0",
+    "expect": "^23.6.0",
     "iltorb": "^2.4.0",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.5",

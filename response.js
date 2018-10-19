@@ -11,6 +11,14 @@ class Response {
 		this.isSessionChallenged = isSessionChallenged;
 		this.isChallengeSolved = isChallengeSolved;
 	}
+	
+	asObj() {
+		let obj = {}
+		for (const [key, value] of Object.entries(this)) {
+			obj[key] = value;
+		}
+		return obj;
+	}
 }
 
 module.exports = Response;

@@ -48,14 +48,9 @@ class Humanoid extends HumanoidReqHandler {
 		return await this.sendRequest(url, "POST", postBody, headers, dataType)
 	}
 	
-	/*
-	TODO: Consider moving "isSessionChallenged" test to reqHandler and return it to humanoid's sendRequest
-	TODO: as part of the abstraction of sendReqAndSolve vs the client's manual sendReq
-	 */
 	async sendRequest(url, method=undefined, data=undefined, headers=undefined, dataType=undefined) {
 		let response = await super.sendRequest(url, method, data, headers, dataType);
 		if (response.isSessionChallenged) {
-			console.log("[!] CloudFlare JavaScript challenge detected.")
 			if (this.autoBypass) {
 				if  (--this.currMaxRetries <= 0) {
 					this._resetCurrMaxRetries();
@@ -64,7 +59,6 @@ class Humanoid extends HumanoidReqHandler {
 					let challengeResponse = await this._bypassJSChallenge(response);
 					// If we got a 200, mark challenge and solved and return
 					challengeResponse.isChallengeSolved = challengeResponse.statusCode === 200;
-					console.log("[+] JavaScript challenge solved successfully")
 					this._resetCurrMaxRetries()
 					return challengeResponse;
 				}
@@ -99,5 +93,5 @@ class Humanoid extends HumanoidReqHandler {
 		}
 	}
 }
-// TODO: Add quiet mode for stdout stuff (Read about JS loggers \o/)
+
 module.exports = Humanoid;
