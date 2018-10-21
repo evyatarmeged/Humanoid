@@ -43,6 +43,10 @@ class HumanoidReqHandler {
 		return config;
 	}
 	
+	isCaptchaInResponse(html) {
+		return html.indexOf("Attention Required! | Cloudflare") > -1 && html.indexOf("CAPTCHA") > -1
+	}
+	
 	isChallengeInResponse(html) {
 		return html.indexOf("jschl") > -1 && html.indexOf("DDoS protection by Cloudflare") > -1;
 	}
@@ -83,10 +87,15 @@ class HumanoidReqHandler {
 		res = res.headers["content-encoding"] === "br" ? await this._decompressBrotli(res) : res;
 		res.body = res.body.toString();
 		
+		if (this.isCaptchaInResponse(res.body)) {
+			throw Error("CAPTCHA page encountered. Cannot perform bypass.")
+		}
+		
 		if (res.statusCode === 503 && this.isChallengeInResponse(res.body)) {
 			// Session is definitely challenged
 			isSessionChallenged = true;
 		}
+		
 		return new Response(
 			res.statusCode, res.statusMessage,
 			res.headers, res.body,
@@ -94,6 +103,5 @@ class HumanoidReqHandler {
 			res.cookies, isSessionChallenged)
 	}
 }
-
 
 module.exports = HumanoidReqHandler;

@@ -17,7 +17,7 @@ class Solver {
 	
 	static _extractInputValuesFromHTML(html) {
 		let $ = cheerio.load(html);
-		return [$("input[name=jschl_vc]").val(), $("input[name=pass]").val()]
+		return [$("input[name=jschl_vc]").val(), $("input[name=pass]").val()];
 	}
 	
 	static _extractChallengeFromHTML(html) {
@@ -28,16 +28,16 @@ class Solver {
 	
 	static _operateOnResult(operator, expr, result) {
 		switch(operator) {
-			case "+=":
-				return result += safeEval(expr);
-			case "*=":
-				return result *= safeEval(expr);
-			case "-=":
-				return result -= safeEval(expr);
-			case "/=":
-				return result /= safeEval(expr);
-			default:
-				throw Error("Could not match operator. Cannot solve JS challenge");
+		case "+=":
+			return result += safeEval(expr);
+		case "*=":
+			return result *= safeEval(expr);
+		case "-=":
+			return result -= safeEval(expr);
+		case "/=":
+			return result /= safeEval(expr);
+		default:
+			throw Error("Could not match operator. Cannot solve JS challenge");
 		}
 	}
 	
@@ -59,9 +59,9 @@ class Solver {
 			.split(";")
 			.map(s => s.match(/(.=.)?(\(\(!\+).*/g))
 			.filter(s => s !== null)
-			.map(s => s[0])
+			.map(s => s[0]);
 		
-		return [challengeInit, challengeMutations]
+		return [challengeInit, challengeMutations];
 	}
 	
 	static _matchChallengeFromScript(script) {
@@ -69,7 +69,7 @@ class Solver {
 		if (testMatches.length === 2) {
 			return testMatches;
 		}
-		throw Error("Failed to match JS challenge with Regular Expressions")
+		throw Error("Failed to match JS challenge with Regular Expressions");
 	}
 
 	static solveChallenge(response) {
@@ -84,7 +84,7 @@ class Solver {
 			let answer = this._buildAnswer(challengeMutations, safeEval(challengeInit));
 			answer = parseFloat(answer.toFixed(10)) + host.length;
 			
-			return {vc: vc, pass: pass, answer: answer, origin: origin}
+			return {vc: vc, pass: pass, answer: answer, origin: origin};
 		} catch (err) {
 			throw Error(`Could not solve or parse JavaScript challenge. Caused due to error:\n${err}`);
 		}

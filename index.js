@@ -1,6 +1,6 @@
 const request = require("request-promise-native");
-const Solver = require("./solver");
-const HumanoidReqHandler = require("./humanoidReqHandler");
+const Solver = require("./src/solver");
+const HumanoidReqHandler = require("./src/humanoidReqHandler");
 
 
 class Humanoid extends HumanoidReqHandler {
@@ -11,10 +11,6 @@ class Humanoid extends HumanoidReqHandler {
 		this.maxRetries = maxRetries;
 		this.currMaxRetries = maxRetries;
 		this._resetCurrMaxRetries = () => this.currMaxRetries = this.maxRetries;
-	}
-	
-	isChallengeInResponse(html) {
-		return html.indexOf("jschl") > -1 && html.indexOf("DDoS protection by Cloudflare") > -1;
 	}
 	
 	async _asyncTimeout(ms) {
