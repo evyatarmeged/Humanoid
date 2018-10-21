@@ -16,7 +16,7 @@ The session cookies can also be delegated to other bots to continue scraping cau
 ## Installation
 via npm:
 ```
-npm install --save-dev humanoid-js
+npm install --save humanoid-js
 ```
 
 ## Usage
