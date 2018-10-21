@@ -43,12 +43,12 @@ test("Getting configuration for HTTP POST with data", () => {
 })
 
 test("CloudFlare JS challenge in page", () => {
-	let challengeHTML = fs.readFileSync(`${__dirname}/../page_samples/cloudflare_js_challenge.html`);
+	let challengeHTML = fs.readFileSync(`${__dirname}/../page_samples/sample_challenge_page.html`);
 	expect(testRequestHandler.isChallengeInResponse(challengeHTML)).toBeTruthy();
 })
 
 test("CloudFlare JS challenge not in page", () => {
-	let noChallengeHTML = fs.readFileSync(`${__dirname}/../page_samples/cloudflare_captcha_page.html`);
+	let noChallengeHTML = fs.readFileSync(`${__dirname}/../page_samples/sample_nonchallenge.html`);
 	expect(testRequestHandler.isChallengeInResponse(noChallengeHTML)).toBeFalsy();
 })
 
@@ -104,21 +104,21 @@ test("Build answer object 2", () => {
 })
 
 test("Extract timeout from script", () => {
-	let challengeHTML = fs.readFileSync(`${__dirname}/../page_samples/cloudflare_js_challenge.html`);
+	let challengeHTML = fs.readFileSync(`${__dirname}/../page_samples/sample_challenge_page.html`);
 	let timeout = Solver._extractTimeoutFromScript(challengeHTML);
 	expect(timeout).toBe("4000");
 	expect(parseInt(timeout)).toBe(4000);
 })
 
 test("Extract input form values", () => {
-	let challengeHTML = fs.readFileSync(`${__dirname}/../page_samples/cloudflare_js_challenge.html`);
+	let challengeHTML = fs.readFileSync(`${__dirname}/../page_samples/sample_challenge_page.html`);
 	let [a, b] = Solver._extractInputValuesFromHTML(challengeHTML);
 	expect(a).not.toBeNull();
 	expect(b).not.toBeNull();
 })
 
 test("Extract challenge", () => {
-	let challengeHTML = fs.readFileSync(`${__dirname}/../page_samples/cloudflare_js_challenge.html`);
+	let challengeHTML = fs.readFileSync(`${__dirname}/../page_samples/sample_challenge_page.html`);
 	let chal = Solver._extractChallengeFromHTML(challengeHTML);
 	expect([chal,chal,chal]).toEqual([
 		expect.stringContaining("f.action += location.hash"),

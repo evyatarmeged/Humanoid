@@ -91,3 +91,4 @@ class Humanoid extends HumanoidReqHandler {
 }
 
 module.exports = Humanoid;
+

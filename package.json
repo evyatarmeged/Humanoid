@@ -1,14 +1,30 @@
 {
-  "name": "humanoidjs",
+  "name": "humanoid-js",
   "version": "0.0.1",
-  "description": "Node.js package that solves CloudFlare's anti-bot JavaScript challenges",
+  "description": "Node.js package to bypass WAF anti-bot JavaScript challenges",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evyatarmeged/Humanoid"
+  },
   "main": "index.js",
   "scripts": {
     "lint": "eslint index.js src/*.js",
     "test": "jest tests",
     "coverage": "jest --collectCoverageFrom=tests/**.js --coverage src"
   },
+  "keywords": [
+    "bot",
+    "WAF",
+    "bypass",
+    "cloudflare",
+    "anti-bot",
+    "scrape",
+    "scraping",
+    "protected-pages",
+    "captcha"
+  ],
   "author": "Evyatar Meged",
+  "homepage": "https://github.com/evyatarmeged/Humanoid",
   "license": "MIT",
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
