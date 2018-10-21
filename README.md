@@ -15,7 +15,9 @@ The session cookies can also be delegated to other bots to continue scraping cau
 
 #### Installation
 via npm:
-`npm install --save-dev humanoid-js`
+```
+npm install --save-dev humanoid-js
+```
 
 #### Usage
 Basic usage with promises:
@@ -34,6 +36,7 @@ humanoid.get("https://www.cloudflare-protected.com")
 Humanoid uses auto-bypass by default. You can override it on instance creation:
 ```javascript
 let humanoid = new Humanoid(autoBypass=false)
+
 humanoid.get("https://canyoupwn.me")
   .then(res => {
   	if (res.isSessionChallenged) {
