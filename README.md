@@ -13,13 +13,13 @@ While anti-bot pages are solvable via headless browsers, they are pretty heavy a
 Humanoid can solve these challenges using the Node.js runtime and present the protected HTML page.<br>
 The session cookies can also be delegated to other bots to continue scraping causing them to avoid the JS challenges altogether.
 
-#### Installation
+## Installation
 via npm:
 ```
 npm install --save-dev humanoid-js
 ```
 
-#### Usage
+## Usage
 Basic usage with promises:
 ```javascript
 const Humanoid = require("humanoid-js");
@@ -42,8 +42,7 @@ humanoid.get("https://canyoupwn.me")
   	if (res.isSessionChallenged) {
       humanoid.bypassJSChallenge(res)
         .then(challengeResponse => {
-        	/* Note that challengeResponse.isChallengedSolved won't be set to true, you'll have to  
-        	set it yourself when doing manual bypassing. */
+        	// Note that challengeResponse.isChallengedSolved won't be set to true when doing manual bypassing.
         	console.log(challengeResponse.body) // <!DOCTYPE html><html lang="en">...
           })
 		}
@@ -61,14 +60,14 @@ humanoid.get("https://canyoupwn.me")
 }())
 ```
 
-### TODOs
+## TODOs
 - [ ] Add command line support
     * Support a flag to return the cookie jar after challenge solved - for better integration with other tools and scrapers
     * Have an option to simply bypass and return the protected HTML
 - [ ] Solve other WAFs similar anti-bot challenges
 - [ ] Add tests for request sending and challenge solving
 
-### Issues and Contributions
+## Issues and Contributions
 All anti-bot challenges are likely to change in the future. If this is the case, please open an issue explaining 
 the problem - try to include the target page if possible. I'll do my best to keep the code up to date with
 new challenges.<br>
