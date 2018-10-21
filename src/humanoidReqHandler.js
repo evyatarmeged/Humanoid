@@ -100,7 +100,7 @@ class HumanoidReqHandler {
 			res.statusCode, res.statusMessage,
 			res.headers, res.body,
 			parsedURL.host, parsedURL.origin,
-			res.cookies, isSessionChallenged)
+			res.headers["set-cookie"], isSessionChallenged)
 	}
 }
 

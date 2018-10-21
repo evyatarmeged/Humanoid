@@ -52,7 +52,7 @@ class Humanoid extends HumanoidReqHandler {
 					this._resetCurrMaxRetries();
 					throw Error("Max retries limit reached. Cannot Solve JavaScript challenge from response:\n" + response)
 				}	else {
-					let challengeResponse = await this._bypassJSChallenge(response);
+					let challengeResponse = await this.bypassJSChallenge(response);
 					// If we got a 200, mark challenge and solved and return
 					challengeResponse.isChallengeSolved = challengeResponse.statusCode === 200;
 					this._resetCurrMaxRetries()
@@ -64,7 +64,7 @@ class Humanoid extends HumanoidReqHandler {
 		return response;
 	}
 	
-	async _bypassJSChallenge(response) {
+	async bypassJSChallenge(response) {
 		let {...solution} = Solver.solveChallenge(response);
 		let timeout = Solver._extractTimeoutFromScript(response.body) || this._getRandomTimeout();
 		if (![solution.vc, solution.pass, solution.answer, solution.origin].every(elem => !!elem)) {
@@ -91,4 +91,3 @@ class Humanoid extends HumanoidReqHandler {
 }
 
 module.exports = Humanoid;
-
