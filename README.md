@@ -7,12 +7,20 @@
 
 A Node.js package to bypass WAF anti-bot JS challenges.
 
-#### About
+## About
 Humanoid is a Node.js package to solve and bypass CloudFlare (and hopefully in the future - other WAFs' as well) JavaScript anti-bot challenges.<br>
 While anti-bot pages are solvable via headless browsers, they are pretty heavy and are usually considered over the top for scraping.<br>
 Humanoid can solve these challenges using the Node.js runtime and present the protected HTML page.<br>
 The session cookies can also be delegated to other bots to continue scraping causing them to avoid the JS challenges altogether.
 
+## Features
+ * Random browser User-Agent 
+ * Auto-retry on failed challenges
+ * Highly configurable - hack custom cookies, headers, etc
+ * Clearing cookies and rotating User-Agent is supported
+ * Supports decompression of `Brotli` content-encoding. Not supported by Node.js' `request` by default!
+ 
+ 
 ## Installation
 via npm:
 ```
@@ -39,14 +47,15 @@ let humanoid = new Humanoid(autoBypass=false)
 
 humanoid.get("https://canyoupwn.me")
   .then(res => {
-  	if (res.isSessionChallenged) {
-      humanoid.bypassJSChallenge(res)
-        .then(challengeResponse => {
-        	// Note that challengeResponse.isChallengedSolved won't be set to true when doing manual bypassing.
-        	console.log(challengeResponse.body) // <!DOCTYPE html><html lang="en">...
-          })
-		}
-	})
+  	console.log(res.statusCode) // 503
+  	console.log(res.isSessionChallenged) // true
+    humanoid.bypassJSChallenge(res)
+      .then(challengeResponse => {
+      	// Note that challengeResponse.isChallengeSolved won't be set to true when doing manual bypassing.
+      	console.log(challengeResponse.body) // <!DOCTYPE html><html lang="en">...
+      })
+    }
+  )
 	.catch(err => {
 		console.error(err)
 	})
@@ -66,6 +75,7 @@ humanoid.get("https://canyoupwn.me")
     * Have an option to simply bypass and return the protected HTML
 - [ ] Solve other WAFs similar anti-bot challenges
 - [ ] Add tests for request sending and challenge solving
+- [ ] Add Docker support :whale:
 
 ## Issues and Contributions
 All anti-bot challenges are likely to change in the future. If this is the case, please open an issue explaining 
