@@ -50,7 +50,10 @@ class Humanoid extends HumanoidReqHandler {
 			if (this.autoBypass) {
 				if  (--this.currMaxRetries <= 0) {
 					this._resetCurrMaxRetries();
-					throw Error("Max retries limit reached. Cannot Solve JavaScript challenge from response:\n" + response)
+					throw Error(
+						`Max retries limit reached. Cannot Solve JavaScript challenge from response:
+						${JSON.stringify(response)}`
+					)
 				}	else {
 					let challengeResponse = await this.bypassJSChallenge(response);
 					// If we got a 200, mark challenge and solved and return
