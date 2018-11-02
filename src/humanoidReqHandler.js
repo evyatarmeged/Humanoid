@@ -79,7 +79,7 @@ class HumanoidReqHandler {
 		let currConfig = {...this.config};
 		currConfig.headers = headers;
 		currConfig.method = method;
-		currConfig = data !== undefined ? this._getConfForMethod(method, currConfig, data, dataType) : currConfig
+		currConfig = data !== undefined ? this._getConfForMethod(method, currConfig, data, dataType) : currConfig;
 		
 		// Send the request
 		let res = await rpn(url, currConfig);

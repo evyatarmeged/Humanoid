@@ -68,6 +68,23 @@ humanoid.get("https://canyoupwn.me")
   console.log(response.body) // <!DOCTYPE html><html lang="en">...
 }())
 ```
+### Humanoid API Methods
+```javascript 1.8
+  rotateUA() // Replace the currently set user agent with a different one
+  
+  clearCookies() // "Set a new, empty cookie jar for the humanoid instance"
+  
+  get(url, queryString=undefined, headers=undefined) // Send a GET request to `url`.
+  // if passed, queryString and headers should be objects 
+  
+  post(url, postBody=undefined, headers=undefined, dataType=undefined) // Send a POST request to `url`.
+  // `dataType` should be either "form" or "json" - based on the content type of the POST request.
+  
+  sendRequest(url, method=undefined, data=undefined, headers=undefined, dataType=undefined) 
+  // Send a request of method `method` to `url`
+  
+  bypassJSChallenge(response) // Bypass the anti-bot JS challenge found in response.body
+```
 
 ## TODOs
 - [ ] Add command line support

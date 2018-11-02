@@ -5,7 +5,7 @@ const HumanoidReqHandler = require("./src/humanoidReqHandler");
 
 class Humanoid extends HumanoidReqHandler {
 	constructor(autoBypass=true, maxRetries=3) {
-		super()
+		super();
 		this._getRandomTimeout = () => Math.floor(Math.random() * (7000 - 5000 + 1)) + 5000;
 		this.autoBypass = autoBypass;
 		this.maxRetries = maxRetries;
@@ -58,7 +58,7 @@ class Humanoid extends HumanoidReqHandler {
 					let challengeResponse = await this.bypassJSChallenge(response);
 					// If we got a 200, mark challenge and solved and return
 					challengeResponse.isChallengeSolved = challengeResponse.statusCode === 200;
-					this._resetCurrMaxRetries()
+					this._resetCurrMaxRetries();
 					return challengeResponse;
 				}
 			}
@@ -79,8 +79,8 @@ class Humanoid extends HumanoidReqHandler {
 		} else {
 			// Wait the desired time;
 			await this._asyncTimeout(timeout);
-			let answerUrl = `${solution.origin}/cdn-cgi/l/chk_jschl`
-			let answerObj = this._buildAnswerObject([solution.vc, solution.pass, solution.answer])
+			let answerUrl = `${solution.origin}/cdn-cgi/l/chk_jschl`;
+			let answerObj = this._buildAnswerObject([solution.vc, solution.pass, solution.answer]);
 			let headers = super._getRequestHeaders(answerUrl);
 			headers["Referer"] = response.origin;
 			
