@@ -1,4 +1,3 @@
-![humanoid](https://image.ibb.co/gqpJrL/humanoid.png)
 # Humanoid
 ![Build Status](https://travis-ci.org/evyatarmeged/Humanoid.svg?branch=master)
 ![license](https://img.shields.io/badge/license-MIT-green.svg)
