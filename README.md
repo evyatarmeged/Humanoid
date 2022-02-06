@@ -34,7 +34,7 @@ const Humanoid = require("humanoid-js");
 let humanoid = new Humanoid();
 humanoid.get("https://www.cloudflare-protected.com")
     .then(res => {
-    	console.log(res.body) // <!DOCTYPE html><html lang="en">...
+    	console.log(res.body.toString()) // <!DOCTYPE html><html lang="en">...
     })
     .catch(err => {
     	console.error(err)
@@ -51,7 +51,7 @@ humanoid.get("https://canyoupwn.me")
     humanoid.bypassJSChallenge(res)
       .then(challengeResponse => {
       	// Note that challengeResponse.isChallengeSolved won't be set to true when doing manual bypassing.
-      	console.log(challengeResponse.body) // <!DOCTYPE html><html lang="en">...
+      	console.log(challengeResponse.body.toString()) // <!DOCTYPE html><html lang="en">...
       })
     }
   )
@@ -64,7 +64,7 @@ humanoid.get("https://canyoupwn.me")
 (async function() {
   let humanoid = new Humanoid();
   let response = await humanoid.sendRequest("www.cloudflare-protected.com")
-  console.log(response.body) // <!DOCTYPE html><html lang="en">...
+  console.log(response.body.toString()) // <!DOCTYPE html><html lang="en">...
 }())
 ```
 ### Humanoid API Methods
