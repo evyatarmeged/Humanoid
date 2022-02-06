@@ -1,6 +1,6 @@
 {
   "name": "humanoid-js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Node.js package to bypass WAF anti-bot JavaScript challenges",
   "repository": {
     "type": "git",
