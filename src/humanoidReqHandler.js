@@ -85,7 +85,12 @@ class HumanoidReqHandler {
 		let res = await rpn(url, currConfig);
 		// Decompress Brotli content-type if returned (Unsupported natively by `request`)
 		res = res.headers["content-encoding"] === "br" ? await this._decompressBrotli(res) : res;
-		res.body = res.body.toString();
+		
+		if (dataType === "json") {
+			res.body = JSON.stringify(res.body);
+		} else {
+			res.body = res.body.toString();
+		}
 		
 		if (this.isCaptchaInResponse(res.body)) {
 			throw Error("CAPTCHA page encountered. Cannot perform bypass.")
